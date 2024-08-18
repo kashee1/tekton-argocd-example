@@ -20,11 +20,11 @@ There are in fact many ways for Tekton to get access to GitHub.
 
 ----
 ssh-keygen -t rsa -b 4096 -C "tekton@tekton.dev"
-# save as tekton / tekton.pub
+# save as tekton (private key) / tekton.pub (public key)
 # add tekton.pub contents to GitHub
 
 # create secret YAML from contents
-cat tekton | base64 -w 0
+base64_data=$(cat tekton | base64 -w 0)
 cat > tekton-git-ssh-secret.yaml << EOM
 apiVersion: v1
 kind: Secret
@@ -35,21 +35,21 @@ metadata:
     tekton.dev/git-0: github.com
 type: kubernetes.io/ssh-auth
 data:
-  ssh-privatekey: <base64 data>
+  ssh-privatekey: $base64_data
 ---
 EOM
 
 kubectl apply -f tekton-git-ssh-secret.yaml
 
 # create your Docker registry secret, for example:
-cat ~/.docker/config.json | base64 -w 0
+base_64_data=$(cat ~/.docker/config.json | base64 -w 0)
 cat > regsecret.yaml << EOM
 kind: Secret
 apiVersion: v1
 metadata:
   name: regsecret
 data:
-  .dockercfg: <base 64 data>
+  .dockercfg: $base_64_data
 type: kubernetes.io/dockercfg
 EOM
 
